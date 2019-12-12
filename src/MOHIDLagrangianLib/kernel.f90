@@ -540,12 +540,21 @@
     subroutine initKernel(self)
     class(kernel_class), intent(inout) :: self
     type(string) :: interpName
+    integer, dimension(6) :: startDate, endDate
+    real(8), dimension(4) :: bbx
+    
     interpName = 'linear'
     call self%Interpolator%initialize(1,interpName)
     call Litter%initialize()
     call VerticalMotion%initialize()
     
-    !call ConstructLitter(1)
+    startDate = Utils%getDateFromDateTime(Globals%SimTime%StartDate)
+    endDate = Utils%getDateFromDateTime(Globals%SimTime%EndDate)
+    bbx(1) = Globals%SimDefs%Pointmin%x
+    bbx(2) = Globals%SimDefs%Pointmax%x
+    bbx(3) = Globals%SimDefs%Pointmin%y
+    bbx(4) = Globals%SimDefs%Pointmax%y
+    !call ConstructLitter(1, startDate, endDate, bbx)
     end subroutine initKernel
 
     end module kernel_mod
