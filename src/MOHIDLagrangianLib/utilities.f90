@@ -33,6 +33,7 @@
     procedure :: getDateFromISOString
     procedure :: getRelativeTimeFromString
     procedure :: getDateTimeFromDate
+    procedure :: getDateFromDateTime
     procedure :: find_str
     procedure :: geo2m_vec, geo2m_comp, geo2m_compSingle, geo2m_vecFull
     generic   :: geo2m => geo2m_vec, geo2m_comp, geo2m_compSingle, geo2m_vecFull
@@ -100,6 +101,26 @@
         stop
     end if
     end function getDateTimeFromDate
+    
+    !---------------------------------------------------------------------------
+    !> @author Ricardo Birjukovs Canelas - MARETEC
+    !> @brief
+    !> Function that returns a real with a time in seconds of a given date
+    !> string, counting from a given date.
+    !> @param[in] self, dateTimeObj
+    !---------------------------------------------------------------------------
+    function getDateFromDateTime(self, dateTimeObj)
+    class(utils_class), intent(in) :: self
+    type(datetime), intent(in) :: dateTimeObj
+    integer, dimension(6) :: getDateFromDateTime
+    type(string) :: outext
+    getDateFromDateTime(1) = dateTimeObj%getYear()
+    getDateFromDateTime(2) = dateTimeObj%getMonth()
+    getDateFromDateTime(3) = dateTimeObj%getDay()
+    getDateFromDateTime(4) = dateTimeObj%getHour()
+    getDateFromDateTime(5) = dateTimeObj%getMinute()
+    getDateFromDateTime(6) = dateTimeObj%getSecond()
+    end function getDateFromDateTime
 
     !---------------------------------------------------------------------------
     !> @author Ricardo Birjukovs Canelas - MARETEC

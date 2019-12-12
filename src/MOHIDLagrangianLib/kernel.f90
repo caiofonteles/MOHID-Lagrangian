@@ -44,6 +44,7 @@
     procedure, private :: StokesDrift
     procedure, private :: Windage
     procedure, private :: Beaching
+    procedure, private :: BeachingHidromod
     procedure, private :: Aging
     end type kernel_class
 
@@ -358,6 +359,47 @@
     end if
 
     end function Beaching
+    
+    !---------------------------------------------------------------------------
+    !> @author Ricardo Birjukovs Canelas - MARETEC
+    !> @brief
+    !> Beaching Kernel, uses the already updated state vector and determines if
+    !> and how beaching occurs. Affects the state vector and state vector derivative.
+    !> @param[in] self, sv, svDt
+    !---------------------------------------------------------------------------
+    function BeachingHidromod(self, sv, svDt)
+    class(kernel_class), intent(inout) :: self
+    type(stateVector_class), intent(inout) :: sv
+    real(prec), dimension(size(sv%state,1),size(sv%state,2)), intent(in) :: svDt
+    real(prec), dimension(size(sv%state,1),size(sv%state,2)) :: BeachingHidromod
+    integer :: i, idx
+    type(string) :: tag
+    integer, dimension(6) :: date
+    logical, dimension(size(sv%state,1)) :: beached, killPartic
+    
+    BeachingHidromod = svDt
+    beached = .false.
+    killPartic = .false.
+
+    if (Globals%Constants%BeachingStopProb /= 0.0) then !beaching is completely turned off if the stopping propability is zero
+        tag = 'age'
+        idx = Utils%find_str(sv%varName, tag, .true.)
+        date = Utils%getDateFromDateTime(Globals%SimTime%CurrDate)
+        !call ModifyLitter(1,date,sv%state(:,1),sv%state(:,2),sv%state(:,idx), sv%source,sv%id, beached, killPartic)
+        !kill
+        where(beached)
+            BeachingHidromod(:,1) = 0.0
+            BeachingHidromod(:,2) = 0.0
+            BeachingHidromod(:,3) = 0.0
+            sv%state(:,4) = 0.0
+            sv%state(:,5) = 0.0
+            sv%state(:,6) = 0.0
+        end where
+        where(killPartic) sv%active = .true.
+        
+    end if
+
+    end function BeachingHidromod
 
     !---------------------------------------------------------------------------
     !> @author Ricardo Birjukovs Canelas - MARETEC
@@ -502,6 +544,8 @@
     call self%Interpolator%initialize(1,interpName)
     call Litter%initialize()
     call VerticalMotion%initialize()
+    
+    !call ConstructLitter(1)
     end subroutine initKernel
 
     end module kernel_mod
