@@ -69,6 +69,7 @@
         real(prec)      ::  dt = MV         !< Timestep for fixed step integrators (s)
         type(vector)    ::  Pointmin        !< Point that defines the lowest corner of the simulation bounding box
         type(vector)    ::  Pointmax        !< Point that defines the upper corner of the simulation bounding box
+        type(vector)    ::  Center          !< Point that defines the center of the simulation bounding box
         logical         ::  autoblocksize = .true.   !< Flag for automatic Block sizing
         type(vector)    ::  blocksize       !< Size (xyz) of a Block (sub-domain)
         integer         ::  numblocks       !< Number of blocks in the simulation
@@ -77,6 +78,7 @@
     procedure :: setdp
     procedure :: setdt
     procedure :: setboundingbox
+    procedure :: setCenter
     procedure :: setblocksize
     procedure :: print => printsimdefs
     end type simdefs_t
@@ -1188,6 +1190,19 @@
         self%Pointmax= coords
     endif
     sizem=sizeof(coords)
+    call SimMemory%adddef(sizem)
+    end subroutine
+    
+    !---------------------------------------------------------------------------
+    !> @author Ricardo Birjukovs Canelas - MARETEC
+    !> @brief
+    !> Bounding box centersetting routine
+    !---------------------------------------------------------------------------
+    subroutine setCenter(self)
+    class(simdefs_t), intent(inout) :: self
+    integer :: sizem
+    self%Center = (self%Pointmin + self%Pointmax)/2.0
+    sizem=sizeof(self%Center)
     call SimMemory%adddef(sizem)
     end subroutine
 

@@ -494,6 +494,7 @@
         call XMLReader%getNodeVector(simdefs_node, pts(i), coords)
         call Globals%SimDefs%setboundingbox(pts(i), coords)
     enddo
+    call Globals%SimDefs%setCenter()
     call Globals%SimDefs%print()
 
     end subroutine init_simdefs
