@@ -107,7 +107,7 @@
     call self%Emitter%initialize()
     !initializing the block solver
     i = Globals%Parameters%Integrator
-    call self%Solver%initialize(i, Globals%Parameters%IntegratorNames(i))
+    call self%Solver%initialize(i, Globals%Parameters%IntegratorNames(i), id)
     sizem = sizeof(self)
     call SimMemory%addblock(sizem)
 

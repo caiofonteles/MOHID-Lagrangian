@@ -30,6 +30,7 @@
     private
 
     type :: solver_class        !< Solver class
+        integer :: blockID          !< id of the owning block
         integer :: solverType = 1   !< Integration Algorithm 1:Euler, 2:Multi-Step Euler, 3:RK4 (default=1)
         type(string) :: name        !< Name of the Integrator algorithm
         type(kernel_class) :: Kernel
@@ -85,7 +86,7 @@
     integer :: i
 
     do i=1, size(sv)
-        sv(i)%state = sv(i)%state + self%Kernel%run(sv(i), bdata, time, dt)*dt
+        sv(i)%state = sv(i)%state + self%Kernel%run(self%blockID,sv(i), bdata, time, dt)*dt
     end do
 
     end subroutine runStepEuler
@@ -115,10 +116,10 @@
         call sv(i)%copyState(predSv)
         allocate(predKernel(size(sv(i)%state, 1), size(sv(i)%state, 2)))
         !computing predictor step
-        predKernel = self%Kernel%run(sv(i), bdata, time, dt)
+        predKernel = self%Kernel%run(self%blockID,sv(i), bdata, time, dt)
         predSv%state = sv(i)%state + predKernel*dt
         !computing corrector step
-        sv(i)%state = sv(i)%state + (predKernel +  self%Kernel%run(predSv, bdata, mstime, dt))*(dt*0.5)
+        sv(i)%state = sv(i)%state + (predKernel +  self%Kernel%run(self%blockID,predSv, bdata, mstime, dt))*(dt*0.5)
         !deallocating
         call predSv%finalize()
         deallocate(predKernel)
@@ -152,16 +153,16 @@
         allocate(k3(size(sv(i)%state, 1), size(sv(i)%state, 2)))
         allocate(k4(size(sv(i)%state, 1), size(sv(i)%state, 2)))
         !1st step
-        k1 = self%Kernel%run(sv(i), bdata, time, dt)*dt
+        k1 = self%Kernel%run(self%blockID, sv(i), bdata, time, dt)*dt
         intSv%state = sv(i)%state + k1*0.5
         !2nd step
-        k2 = self%Kernel%run(intSv, bdata, time + 0.5*dt, dt)*dt
+        k2 = self%Kernel%run(self%blockID, intSv, bdata, time + 0.5*dt, dt)*dt
         intSv%state = sv(i)%state + k2*0.5
         !3rd step
-        k3 = self%Kernel%run(intSv, bdata, time + 0.5*dt, dt)*dt
+        k3 = self%Kernel%run(self%blockID, intSv, bdata, time + 0.5*dt, dt)*dt
         intSv%state = sv(i)%state + k3
         !4th step
-        k4 = self%Kernel%run(intSv, bdata, time + dt, dt)*dt
+        k4 = self%Kernel%run(self%blockID, intSv, bdata, time + dt, dt)*dt
         !computing the new state
         sv(i)%state = sv(i)%state + (k1 + 2.0*k2 + 2.0*k3 + k4)/6.0
         !deallocating
@@ -181,14 +182,18 @@
     !> and name of the algorithm this Solver will call
     !> @param[in] self, flag, name
     !---------------------------------------------------------------------------
-    subroutine initSolver(self, flag, name)
+    subroutine initSolver(self, flag, name, blkID)
     class(solver_class), intent(inout) :: self
     integer, intent(in) :: flag
     type(string), intent(in) :: name
+    integer, intent(in) :: blkID
     type(string) :: interpName
+    
+    self%blockID = blkID
     self%solverType = flag
     self%name = name
     call self%Kernel%initialize()
+    
     end subroutine initSolver
 
     !---------------------------------------------------------------------------

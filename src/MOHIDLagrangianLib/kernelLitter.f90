@@ -28,14 +28,15 @@
     use stateVector_mod
     use background_mod
     use interpolator_mod
+    use vintageModules_mod
 
 
     type :: kernelLitter_class        !< Litter kernel class
         type(interpolator_class) :: Interpolator !< The interpolator object for the kernel
     contains
     procedure :: initialize => initKernelLitter
-    procedure :: DegradationLinear
-    !procedure :: Buoyancy
+    procedure :: DegradationFirstOrder
+    procedure :: BeachingHidromod
     end type kernelLitter_class
 
     public :: kernelLitter_class
@@ -47,23 +48,64 @@
     !> Linear degradation kernel.
     !> @param[in] self, sv
     !---------------------------------------------------------------------------
-    function DegradationLinear(self, sv)
+    function DegradationFirstOrder(self, sv)
     class(kernelLitter_class), intent(in) :: self
     type(stateVector_class), intent(inout) :: sv
-    real(prec), dimension(size(sv%state,1),size(sv%state,2)) :: DegradationLinear
+    real(prec), dimension(size(sv%state,1),size(sv%state,2)) :: DegradationFirstOrder
     integer :: nf, idx
     type(string) :: tag
 
-    DegradationLinear = 0.0
+    DegradationFirstOrder = 0.0
     tag = 'condition'
     nf = Utils%find_str(sv%varName, tag, .true.)
     tag = 'degradation_rate'
     idx = Utils%find_str(sv%varName, tag, .true.)
 
-    DegradationLinear(:,nf) = -sv%state(:,idx)
+    DegradationFirstOrder(:,nf) = -sv%state(:,idx)
     where(sv%state(:,nf) < 0.0) sv%active = .false.
 
-    end function DegradationLinear
+    end function DegradationFirstOrder
+    
+    !---------------------------------------------------------------------------
+    !> @author Ricardo Birjukovs Canelas - MARETEC
+    !> @brief
+    !> Beaching Kernel, uses the already updated state vector and determines if
+    !> and how beaching occurs. Affects the state vector and state vector derivative.
+    !> @param[in] self, sv, svDt
+    !---------------------------------------------------------------------------
+    function BeachingHidromod(self, procID, sv, svDt)
+    class(kernelLitter_class), intent(inout) :: self
+    integer , intent(in) :: procID
+    type(stateVector_class), intent(inout) :: sv
+    real(prec), dimension(size(sv%state,1),size(sv%state,2)), intent(in) :: svDt
+    real(prec), dimension(size(sv%state,1),size(sv%state,2)) :: BeachingHidromod
+    integer :: i, idx
+    type(string) :: tag
+    integer, dimension(6) :: date
+    logical, dimension(size(sv%state,1)) :: beached, killPartic
+    
+    BeachingHidromod = svDt
+    beached = .false.
+    killPartic = .false.
+
+    if (Globals%Constants%BeachingStopProb /= 0.0) then !beaching is completely turned off if the stopping propability is zero
+        tag = 'age'
+        idx = Utils%find_str(sv%varName, tag, .true.)
+        date = Utils%getDateFromDateTime(Globals%SimTime%CurrDate)
+        call vintageModules%runLitterModule(procID,date,sv%state(:,1),sv%state(:,2),sv%state(:,idx), sv%source,sv%id, beached, killPartic)
+        where(beached)
+            BeachingHidromod(:,1) = 0.0
+            BeachingHidromod(:,2) = 0.0
+            BeachingHidromod(:,3) = 0.0
+            sv%state(:,4) = 0.0
+            sv%state(:,5) = 0.0
+            sv%state(:,6) = 0.0
+        end where
+        where(killPartic) sv%active = .false.
+        
+    end if
+
+    end function BeachingHidromod
 
     !---------------------------------------------------------------------------
     !> @author Daniel Garaboa Paz - GFNL

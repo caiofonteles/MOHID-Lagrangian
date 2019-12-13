@@ -44,7 +44,6 @@
     procedure, private :: StokesDrift
     procedure, private :: Windage
     procedure, private :: Beaching
-    procedure, private :: BeachingHidromod
     procedure, private :: Aging
     end type kernel_class
 
@@ -61,8 +60,9 @@
     !> kernel, according to the selected kernel
     !> @param[in] self, sv, bdata, time, dt
     !---------------------------------------------------------------------------
-    function runKernel(self, sv, bdata, time, dt)
+    function runKernel(self, procID, sv, bdata, time, dt)
     class(kernel_class), intent(inout) :: self
+    integer, intent(in) :: procID
     type(stateVector_class), intent(inout) :: sv
     type(background_class), dimension(:), intent(in) :: bdata
     real(prec), intent(in) :: time, dt
@@ -74,13 +74,16 @@
     !running kernels for each type of tracer
     if (sv%ttype == Globals%Types%base) then
         runKernel = self%LagrangianKinematic(sv, bdata, time) + self%StokesDrift(sv, bdata, time) + self%Windage(sv, bdata, time) + self%DiffusionMixingLength(sv, bdata, time, dt) + self%Aging(sv)
-        runKernel = self%Beaching(sv, runKernel)
+        !runKernel = self%Beaching(sv, runKernel)
+        runKernel = Litter%BeachingHidromod(procID, sv, runKernel)
     else if (sv%ttype == Globals%Types%paper) then
-        runKernel = self%LagrangianKinematic(sv, bdata, time) + self%StokesDrift(sv, bdata, time) + self%Windage(sv, bdata, time) + self%DiffusionMixingLength(sv, bdata, time, dt) + self%Aging(sv) + Litter%DegradationLinear(sv)+ VerticalMotion%Buoyancy(sv, bdata, time)
-        runKernel = self%Beaching(sv, runKernel)
+        runKernel = self%LagrangianKinematic(sv, bdata, time) + self%StokesDrift(sv, bdata, time) + self%Windage(sv, bdata, time) + self%DiffusionMixingLength(sv, bdata, time, dt) + self%Aging(sv) + Litter%DegradationFirstOrder(sv)+ VerticalMotion%Buoyancy(sv, bdata, time)
+        !runKernel = self%Beaching(sv, runKernel)
+        runKernel = Litter%BeachingHidromod(procID, sv, runKernel)
     else if (sv%ttype == Globals%Types%plastic) then
-        runKernel = self%LagrangianKinematic(sv, bdata, time) + self%StokesDrift(sv, bdata, time) + self%Windage(sv, bdata, time) + self%DiffusionMixingLength(sv, bdata, time, dt) + self%Aging(sv) + Litter%DegradationLinear(sv) + VerticalMotion%Buoyancy(sv, bdata, time)
-        runKernel = self%Beaching(sv, runKernel)
+        runKernel = self%LagrangianKinematic(sv, bdata, time) + self%StokesDrift(sv, bdata, time) + self%Windage(sv, bdata, time) + self%DiffusionMixingLength(sv, bdata, time, dt) + self%Aging(sv) + Litter%DegradationFirstOrder(sv) + VerticalMotion%Buoyancy(sv, bdata, time)
+        !runKernel = self%Beaching(sv, runKernel)
+        runKernel = Litter%BeachingHidromod(procID, sv, runKernel)
     end if
     
     runKernel = VerticalMotion%CorrectVerticalBounds(sv, runKernel, bdata, time, dt)
@@ -363,47 +366,6 @@
     !---------------------------------------------------------------------------
     !> @author Ricardo Birjukovs Canelas - MARETEC
     !> @brief
-    !> Beaching Kernel, uses the already updated state vector and determines if
-    !> and how beaching occurs. Affects the state vector and state vector derivative.
-    !> @param[in] self, sv, svDt
-    !---------------------------------------------------------------------------
-    function BeachingHidromod(self, sv, svDt)
-    class(kernel_class), intent(inout) :: self
-    type(stateVector_class), intent(inout) :: sv
-    real(prec), dimension(size(sv%state,1),size(sv%state,2)), intent(in) :: svDt
-    real(prec), dimension(size(sv%state,1),size(sv%state,2)) :: BeachingHidromod
-    integer :: i, idx
-    type(string) :: tag
-    integer, dimension(6) :: date
-    logical, dimension(size(sv%state,1)) :: beached, killPartic
-    
-    BeachingHidromod = svDt
-    beached = .false.
-    killPartic = .false.
-
-    if (Globals%Constants%BeachingStopProb /= 0.0) then !beaching is completely turned off if the stopping propability is zero
-        tag = 'age'
-        idx = Utils%find_str(sv%varName, tag, .true.)
-        date = Utils%getDateFromDateTime(Globals%SimTime%CurrDate)
-        !call ModifyLitter(1,date,sv%state(:,1),sv%state(:,2),sv%state(:,idx), sv%source,sv%id, beached, killPartic)
-        !kill
-        where(beached)
-            BeachingHidromod(:,1) = 0.0
-            BeachingHidromod(:,2) = 0.0
-            BeachingHidromod(:,3) = 0.0
-            sv%state(:,4) = 0.0
-            sv%state(:,5) = 0.0
-            sv%state(:,6) = 0.0
-        end where
-        where(killPartic) sv%active = .true.
-        
-    end if
-
-    end function BeachingHidromod
-
-    !---------------------------------------------------------------------------
-    !> @author Ricardo Birjukovs Canelas - MARETEC
-    !> @brief
     !> Aging kernel. Sets the age variable to be updated by dt by the solver
     !> @param[in] self, sv
     !---------------------------------------------------------------------------
@@ -540,21 +502,12 @@
     subroutine initKernel(self)
     class(kernel_class), intent(inout) :: self
     type(string) :: interpName
-    integer, dimension(6) :: startDate, endDate
-    real(8), dimension(4) :: bbx
     
     interpName = 'linear'
     call self%Interpolator%initialize(1,interpName)
     call Litter%initialize()
     call VerticalMotion%initialize()
     
-    startDate = Utils%getDateFromDateTime(Globals%SimTime%StartDate)
-    endDate = Utils%getDateFromDateTime(Globals%SimTime%EndDate)
-    bbx(1) = Globals%SimDefs%Pointmin%x
-    bbx(2) = Globals%SimDefs%Pointmax%x
-    bbx(3) = Globals%SimDefs%Pointmin%y
-    bbx(4) = Globals%SimDefs%Pointmax%y
-    !call ConstructLitter(1, startDate, endDate, bbx)
     end subroutine initKernel
 
     end module kernel_mod

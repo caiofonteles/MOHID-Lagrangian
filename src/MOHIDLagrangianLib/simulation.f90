@@ -30,6 +30,7 @@
     use simulationOutputStreamer_mod
     use simulationInputStreamer_mod
     use common_modules
+    use vintageModules_mod
 
     implicit none
     private
@@ -210,7 +211,9 @@
     call self%OutputStreamer%initialize()
     !Writing the domain to file
     call self%OutputStreamer%WriteDomain(Globals%Names%casename, BBox, Geometry%getnumPoints(BBox), sBlock)
-
+    !initializing external modules
+    call vintageModules%initialize(size(sBlock))
+    
     call self%timerInit%Toc()
     call self%timerInit%print()
 
@@ -511,6 +514,9 @@
     call Log%put(outext)
     call Log%finalize()
     call self%OutputStreamer%finalize()
+    
+    call vintageModules%finalize(size(sBlock))
+    
     end subroutine closeSimulation
 
 
