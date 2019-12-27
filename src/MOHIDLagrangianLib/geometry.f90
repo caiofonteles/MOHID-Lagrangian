@@ -210,7 +210,7 @@
     class is (point)
         getFillPoints(1)=0.0
     class is (line)
-        call line_grid(Utils%geo2m(shapetype%last-shapetype%pt, shapetype%pt%y), fillSize, getFillPoints)
+        call line_grid(Utils%geo2cart(shapetype%last-shapetype%pt, Globals%SimDefs%Center), fillSize, getFillPoints)
     class is (polyline)
         call polylineGrid(dp, shapetype, getFillPoints)
     class is (sphere)
@@ -238,7 +238,7 @@
     select type (shapetype)
     type is (shape)
     class is (box)
-        center = shapetype%pt + Utils%m2geo(shapetype%size, shapetype%pt%y)/2.0
+        center = shapetype%pt + Utils%cart2geo(shapetype%size, Globals%SimDefs%Center)/2.0
     class is (point)
         center = shapetype%pt
     class is (line)
@@ -383,7 +383,7 @@
     class(polygon), intent(in) :: self
 
     allocate(getMetricPolygon%vertex(size(self%vertex)))
-    getMetricPolygon%vertex = Utils%geo2m(self%vertex - self%pt)
+    getMetricPolygon%vertex = Utils%geo2cart(self%vertex - self%pt, Globals%SimDefs%Center)
     call getMetricPolygon%setBoundingBox(self%bbMin%z-self%bbMin%z/2.0, self%bbMax%z-self%bbMin%z/2.0)
     getMetricPolygon%pt = self%pt
     end function getMetricPolygon
@@ -595,7 +595,7 @@
     type(vector) :: temp
     
     temp = firstPoint - lastPoint
-    temp = Utils%geo2m(temp, firstPoint%y)
+    temp = Utils%geo2cart(temp, Globals%SimDefs%Center)
     lineNpCount = max(int(temp%normL2()/dp%normL2()),1)
     if (lineNpCount == 0) then !Just the center point
         lineNpCount=1
@@ -783,12 +783,12 @@
         return
     end if
     nptsSegm = lineNpCount(dp, polylineObj%pt, polylineObj%point(1))
-    call line_grid(Utils%geo2m(polylineObj%point(1)-polylineObj%pt, polylineObj%pt%y), nptsSegm, ptlist(1:nptsSegm))
+    call line_grid(Utils%geo2cart(polylineObj%point(1)-polylineObj%pt, Globals%SimDefs%Center), nptsSegm, ptlist(1:nptsSegm))
     accm = nptsSegm    
     do i=1, size(polylineObj%point)-1
         offset = ptlist(accm)
         nptsSegm = lineNpCount(dp, polylineObj%point(i), polylineObj%point(i+1))
-        call line_grid(Utils%geo2m(polylineObj%point(i+1)-polylineObj%point(i), polylineObj%point(i)%y), nptsSegm, ptlist(accm + 1 : accm + nptsSegm), offset)
+        call line_grid(Utils%geo2cart(polylineObj%point(i+1)-polylineObj%point(i), Globals%SimDefs%Center), nptsSegm, ptlist(accm + 1 : accm + nptsSegm), offset)
         accm = accm + nptsSegm
     end do
 

@@ -173,8 +173,10 @@
     real(prec) :: pi
     pi = 4*atan(1.0)
     R = 6378000 !earth radius in meters
-    geo2cart_vec%x = (geovec%x - ref%x)*(R*pi/180.0)*cos(pi*geovec%y/180.0)
-    geo2cart_vec%y = (geovec%y - ref%y)*(R*pi/180.0)
+    !geo2cart_vec%x = (geovec%x - ref%x)*(R*pi/180.0)*cos(pi*geovec%y/180.0)
+    !geo2cart_vec%y = (geovec%y - ref%y)*(R*pi/180.0)
+    geo2cart_vec%x = (geovec%x )*(R*pi/180.0)*cos(pi*geovec%y/180.0)
+    geo2cart_vec%y = (geovec%y )*(R*pi/180.0)
     end function geo2cart_vec
     
     !---------------------------------------------------------------------------
@@ -195,9 +197,11 @@
     real(prec) :: pi = 4*atan(1.0)
     R = 6378000 !earth radius in meters
     if (isLat) then
-        geo2cart_comp = (geovec - ref%y)*(R*pi/180.0)
+        !geo2cart_comp = (geovec - ref%y)*(R*pi/180.0)
+        geo2cart_comp = (geovec )*(R*pi/180.0)
     else
-        geo2cart_comp = (geovec - ref%x)*((R*pi/180.0)*cos(pi*lat/180.0))
+        !geo2cart_comp = (geovec - ref%x)*((R*pi/180.0)*cos(pi*lat/180.0))
+        geo2cart_comp = (geovec )*((R*pi/180.0)*cos(pi*lat/180.0))
     end if
     end function geo2cart_comp
     
@@ -219,9 +223,11 @@
     real(prec) :: pi = 4*atan(1.0)
     R = 6378000 !earth radius in meters
     if (isLat) then
-        geo2cart_compSingle = (geovec - ref%y)*(R*pi/180.0)
+        !geo2cart_compSingle = (geovec - ref%y)*(R*pi/180.0)
+        geo2cart_compSingle = (geovec )*(R*pi/180.0)
     else
-        geo2cart_compSingle = (geovec - ref%x)*((R*pi/180.0)*cos(pi*lat/180.0))
+        !geo2cart_compSingle = (geovec - ref%x)*((R*pi/180.0)*cos(pi*lat/180.0))
+        geo2cart_compSingle = (geovec )*((R*pi/180.0)*cos(pi*lat/180.0))
     end if
     end function geo2cart_compSingle
     
@@ -241,8 +247,8 @@
     real(prec) :: pi
     pi = 4*atan(1.0)
     R = 6378000 !earth radius in meters
-    cart2geo_vec%y = mvec%y/(R*pi/180.0) + ref%y
-    cart2geo_vec%x = mvec%x/((R*pi/180.0)*cos(pi*mvec%y/180.0)) + ref%x
+    cart2geo_vec%y = mvec%y/(R*pi/180.0)! + ref%y
+    cart2geo_vec%x = mvec%x/((R*pi/180.0)*cos(pi*mvec%y/180.0))! + ref%x
     end function cart2geo_vec
     
     !---------------------------------------------------------------------------
@@ -264,9 +270,9 @@
     real(prec) :: pi = 4*atan(1.0)
     R = 6378000 !earth radius in meters
     if (isLat) then
-        cart2geo_comp = mvec/(R*pi/180.0)+ ref%y
+        cart2geo_comp = mvec/(R*pi/180.0)! + ref%y
     else
-        cart2geo_comp = mvec/((R*pi/180.0)*cos(pi*lat/180.0)) + ref%x
+        cart2geo_comp = mvec/((R*pi/180.0)*cos(pi*lat/180.0))! + ref%x
     end if
     end function cart2geo_comp
     

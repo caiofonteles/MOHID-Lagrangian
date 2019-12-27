@@ -611,9 +611,9 @@
                 xIndx = self%getDimIndex(Globals%Var%lon)
                 yIndx = self%getDimIndex(Globals%Var%lat)
                 do j=1, size(xx3d,2)
-                    xx3d(:,j,1) = Utils%geo2m(abs(self%dim(xIndx)%field(:size(curr%field,1)-1) - self%dim(xIndx)%field(2:)), self%dim(yIndx)%field(j), .false.)
+                    xx3d(:,j,1) = Utils%geo2cart(abs(self%dim(xIndx)%field(:size(curr%field,1)-1) - self%dim(xIndx)%field(2:)), self%dim(yIndx)%field(j), Globals%SimDefs%Center, .false.)
                 end do
-                yy3d(1,:,1) = Utils%geo2m(abs(self%dim(yIndx)%field(:size(curr%field,2)-1) - self%dim(yIndx)%field(2:)), self%dim(yIndx)%field(1), .true.)
+                yy3d(1,:,1) = Utils%geo2cart(abs(self%dim(yIndx)%field(:size(curr%field,2)-1) - self%dim(yIndx)%field(2:)), self%dim(yIndx)%field(1), Globals%SimDefs%Center, .true.)
                 do i=2, size(yy3d,1)
                     yy3d(i,:,1) = yy3d(1,:,1)
                 end do
@@ -633,9 +633,9 @@
                 yIndx = self%getDimIndex(Globals%Var%lat)
                 zIndx = self%getDimIndex(Globals%Var%level)
                 do j=1, size(xx4d,2)
-                    xx4d(:,j,1,1) = Utils%geo2m(abs(self%dim(xIndx)%field(:size(curr%field,1)-1) - self%dim(xIndx)%field(2:)), self%dim(yIndx)%field(j), .false.)
+                    xx4d(:,j,1,1) = Utils%geo2cart(abs(self%dim(xIndx)%field(:size(curr%field,1)-1) - self%dim(xIndx)%field(2:)), self%dim(yIndx)%field(j), Globals%SimDefs%Center, .false.)
                 end do
-                yy4d(1,:,1,1) = Utils%geo2m(abs(self%dim(yIndx)%field(:size(curr%field,2)-1) - self%dim(yIndx)%field(2:)), self%dim(yIndx)%field(1), .true.)
+                yy4d(1,:,1,1) = Utils%geo2cart(abs(self%dim(yIndx)%field(:size(curr%field,2)-1) - self%dim(yIndx)%field(2:)), self%dim(yIndx)%field(1), Globals%SimDefs%Center, .true.)
                 do i=2, size(yy4d,1)
                     yy4d(i,:,1,1) = yy4d(1,:,1,1)
                 end do

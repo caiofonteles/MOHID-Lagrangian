@@ -183,10 +183,10 @@
 
                 !write dx/dt
                 nf = Utils%find_str(var_name, Globals%Var%u, .true.)
-                LagrangianKinematic(:,1) = Utils%m2geo(var_dt(:,nf), sv%state(:,2), .false.)
+                LagrangianKinematic(:,1) = Utils%cart2geo(var_dt(:,nf), sv%state(:,2), Globals%SimDefs%Center, .false.)
                 sv%state(:,4) = var_dt(:,nf)
                 nf = Utils%find_str(var_name, Globals%Var%v, .true.)
-                LagrangianKinematic(:,2) = Utils%m2geo(var_dt(:,nf), sv%state(:,2), .true.)
+                LagrangianKinematic(:,2) = Utils%cart2geo(var_dt(:,nf), sv%state(:,2), Globals%SimDefs%Center, .true.)
                 sv%state(:,5) = var_dt(:,nf)
                 nf = Utils%find_str(var_name, Globals%Var%w, .false.)
                 if (nf /= MV_INT) then
@@ -246,9 +246,9 @@
                 depth = exp(depth)
                 !write dx/dt
                 nf = Utils%find_str(var_name, Globals%Var%vsdx, .true.)
-                StokesDrift(:,1) = Utils%m2geo(var_dt(:,nf), sv%state(:,2), .false.)*waveCoeff*depth
+                StokesDrift(:,1) = Utils%cart2geo(var_dt(:,nf), sv%state(:,2), Globals%SimDefs%Center, .false.)*waveCoeff*depth
                 nf = Utils%find_str(var_name, Globals%Var%vsdy, .true.)
-                StokesDrift(:,2) = Utils%m2geo(var_dt(:,nf), sv%state(:,2), .true.)*waveCoeff*depth
+                StokesDrift(:,2) = Utils%cart2geo(var_dt(:,nf), sv%state(:,2), Globals%SimDefs%Center, .true.)*waveCoeff*depth
                 deallocate(var_dt)
                 deallocate(var_name)
             end if
@@ -298,9 +298,9 @@
                 depth = exp(10.0*depth)
                 !write dx/dt
                 nf = Utils%find_str(var_name, Globals%Var%u10, .true.)
-                Windage(:,1) = Utils%m2geo(var_dt(:,nf), sv%state(:,2), .false.)*windCoeff*depth
+                Windage(:,1) = Utils%cart2geo(var_dt(:,nf), sv%state(:,2), Globals%SimDefs%Center, .false.)*windCoeff*depth
                 nf = Utils%find_str(var_name, Globals%Var%v10, .true.)
-                Windage(:,2) = Utils%m2geo(var_dt(:,nf), sv%state(:,2), .true.)*windCoeff*depth
+                Windage(:,2) = Utils%cart2geo(var_dt(:,nf), sv%state(:,2), Globals%SimDefs%Center, .true.)*windCoeff*depth
                 deallocate(var_dt)
                 deallocate(var_name)
             end if
@@ -435,13 +435,13 @@
                     DiffusionMixingLength(:,9) = (2.*rand_vel_w-1.)*sqrt(0.000001*Globals%Constants%DiffusionCoeff*abs(sv%state(:,6))/dt)/dt
                     sv%state(:,10) = 0.0
                     !update system positions
-                    DiffusionMixingLength(:,1) = Utils%m2geo(DiffusionMixingLength(:,7), sv%state(:,2), .false.)*dt
-                    DiffusionMixingLength(:,2) = Utils%m2geo(DiffusionMixingLength(:,8), sv%state(:,2), .true.)*dt
+                    DiffusionMixingLength(:,1) = Utils%cart2geo(DiffusionMixingLength(:,7), sv%state(:,2), Globals%SimDefs%Center, .false.)*dt
+                    DiffusionMixingLength(:,2) = Utils%cart2geo(DiffusionMixingLength(:,8), sv%state(:,2), Globals%SimDefs%Center, .true.)*dt
                     DiffusionMixingLength(:,3) = DiffusionMixingLength(:,9)*dt
                 elsewhere
                     !update system positions
-                    DiffusionMixingLength(:,1) = Utils%m2geo(sv%state(:,7), sv%state(:,2), .false.)
-                    DiffusionMixingLength(:,2) = Utils%m2geo(sv%state(:,8), sv%state(:,2), .true.)
+                    DiffusionMixingLength(:,1) = Utils%cart2geo(sv%state(:,7), sv%state(:,2), Globals%SimDefs%Center, .false.)
+                    DiffusionMixingLength(:,2) = Utils%cart2geo(sv%state(:,8), sv%state(:,2), Globals%SimDefs%Center, .true.)
                     DiffusionMixingLength(:,3) = sv%state(:,9)
                 end where
                 !update system velocities
@@ -482,8 +482,8 @@
     !update velocities
     ! For the moment we set D = 1 m/s, then the D parameter
     ! should be part of the array of tracers parameter
-    DiffusionIsotropic(:,1) = Utils%m2geo((2.*rand_vel_u-1.)*sqrt(2.*D/dt), sv%state(:,2), .false.)
-    DiffusionIsotropic(:,2) = Utils%m2geo((2.*rand_vel_v-1.)*sqrt(2.*D/dt), sv%state(:,2), .true.)
+    DiffusionIsotropic(:,1) = Utils%cart2geo((2.*rand_vel_u-1.)*sqrt(2.*D/dt), sv%state(:,2), Globals%SimDefs%Center, .false.)
+    DiffusionIsotropic(:,2) = Utils%cart2geo((2.*rand_vel_v-1.)*sqrt(2.*D/dt), sv%state(:,2), Globals%SimDefs%Center, .true.)
     !DiffusionIsotropic(:,3) = (2.*rand_vel_w-1.)*sqrt(2.*D*0.0005/dt)
     where (sv%state(:,6) /= 0.0) DiffusionIsotropic(:,3) = (2.*rand_vel_w-1.)*sqrt(2.*D*0.0005/dt)
 

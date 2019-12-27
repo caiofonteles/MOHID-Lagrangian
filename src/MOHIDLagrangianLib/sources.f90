@@ -536,6 +536,7 @@
     allocate(src%stencil%ptlist, source = Geometry%getFillPoints(src%par%geometry, src%stencil%dp))
     src%stencil%np = size(src%stencil%ptlist)
     call src%setotalnp()
+    !src%stencil%ptlist = Utils%cart2geo(src%stencil%ptlist, Globals%SimDefs%Center)
     src%stencil%ptlist = Utils%m2geo(src%stencil%ptlist)
 
     sizem = sizeof(src)
